@@ -1,0 +1,102 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches: [ feedback ]
+    types: [ opened, reopened ]
+  
+jobs:
+  buildtest:
+    if: (github.actor == 'RonoveRaum') || (github.run_number < 16)    
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: install_deps
+        id: install_deps
+        shell: pwsh
+        run: |  
+          cd .github/workflows/   
+          sudo dpkg -i iverilog_11.0-1.1_amd64.deb
+          iverilog -v
+          exit 0
+                
+      - name: update_readme1
+        id: update_readme1
+        uses: theboi/github-update-readme@v1.3.0  
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
+        with: 
+          customReadmeFile: |
+            # Test log
+          
+            ## More info in Github.Actions: [![statusbadge](../../actions/workflows/buildtest.yml/badge.svg?branch=main&event=pull_request)](../../actions/workflows/buildtest.yml)
+            
+            ### Install dependencies             
+            Done
+            
+            ### Compile
+            Failed
+          
+      - name: build_ubuntu
+        id: build_ubuntu
+        run: |  
+          iverilog -g2012 -o testbench.out testbench.sv > log.txt 2>&1
+          echo "bec=\"$(echo $?)\"" >> $GITHUB_OUTPUT
+          log=$(cat log.txt)
+          echo "blog=\"$log\"" >> $GITHUB_OUTPUT
+          echo "$log"
+          exit 0 
+                 
+      - name: update_readme2
+        id: update_readme2
+        if: ${{ steps.test_ubuntu.outputs.bec }}
+        uses: theboi/github-update-readme@v1.3.0  
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
+        with: 
+          customReadmeFile: |
+            # Test log
+           
+            ## More info in Github.Actions: [![statusbadge](../../actions/workflows/buildtest.yml/badge.svg?branch=main&event=pull_request)](../../actions/workflows/buildtest.yml)
+            
+            ### Install dependencies         
+            Done
+            
+            ### Compile failed with exit code ${{ steps.test_ubuntu.outputs.bec }}:
+            ${{ steps.test_ubuntu.outputs.blog }}
+            
+      - name: test_ubuntu
+        id: test_ubuntu
+        run: |  
+          log=$(vvp testbench.out)
+          log="${log//'%'/'%25'}"
+          #log="${log//$'\n'/'\\'}"
+          log="${log//$'\n'/'<br/>'}"
+          #log="${log//$'\n'/'%0A'}"
+          #log="${log//$'\r'/'%0D'}"
+          echo "tlog=$log" >> $GITHUB_OUTPUT
+          echo "$log"
+          
+      - name: update_readme
+        id: update_readme
+        uses: theboi/github-update-readme@v1.3.0  
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
+        with: 
+          customReadmeFile: |
+            # Test log
+           
+            ## More info in Github.Actions: [![statusbadge](../../actions/workflows/buildtest.yml/badge.svg?branch=main&event=pull_request)](../../actions/workflows/buildtest.yml)
+            
+            ### Install dependencies           
+            Done
+                        
+            ### Compile complited (build log, can be empty):
+            ${{ steps.test_ubuntu.outputs.blog }}
+            
+            ### Log:
+            ${{ steps.test_ubuntu.outputs.tlog }}
+            
+          
