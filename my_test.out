@@ -1,0 +1,254 @@
+#! /c/Source/iverilog-install/bin/vvp
+:ivl_version "12.0 (devel)" "(s20150603-1539-g2693dd32b)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision + 0;
+:vpi_module "C:\PROGRA~1\iverilog\lib\ivl\system.vpi";
+:vpi_module "C:\PROGRA~1\iverilog\lib\ivl\vhdl_sys.vpi";
+:vpi_module "C:\PROGRA~1\iverilog\lib\ivl\vhdl_textio.vpi";
+:vpi_module "C:\PROGRA~1\iverilog\lib\ivl\v2005_math.vpi";
+:vpi_module "C:\PROGRA~1\iverilog\lib\ivl\va_math.vpi";
+:vpi_module "C:\PROGRA~1\iverilog\lib\ivl\v2009.vpi";
+S_000001bfa77d6ee0 .scope package, "$unit" "$unit" 2 1;
+ .timescale 0 0;
+S_000001bfa77f1770 .scope module, "test" "test" 3 5;
+ .timescale 0 0;
+o000001bfa77f7f98 .functor BUFZ 15, C4<zzzzzzzzzzzzzzz>; HiZ drive
+v000001bfa77e3ca0_0 .net "A1", 14 0, o000001bfa77f7f98;  0 drivers
+o000001bfa77f7fc8 .functor BUFZ 19, C4<zzzzzzzzzzzzzzzzzzz>; HiZ drive
+v000001bfa77e3d40_0 .net "A2", 18 0, o000001bfa77f7fc8;  0 drivers
+v000001bfa77e3de0_0 .net "C1", 2 0, L_000001bfa77f6980;  1 drivers
+o000001bfa77f8028 .functor BUFZ 2, C4<zz>; HiZ drive
+v000001bfa77e3340_0 .net "C2", 1 0, o000001bfa77f8028;  0 drivers
+o000001bfa77f8058 .functor BUFZ 1, C4<z>; HiZ drive
+v000001bfa77e2ee0_0 .net "C_DUMP", 0 0, o000001bfa77f8058;  0 drivers
+o000001bfa77f8088 .functor BUFZ 16, C4<zzzzzzzzzzzzzzzz>; HiZ drive
+v000001bfa77e3160_0 .net "D1", 15 0, o000001bfa77f8088;  0 drivers
+o000001bfa77f80b8 .functor BUFZ 16, C4<zzzzzzzzzzzzzzzz>; HiZ drive
+v000001bfa77e3480_0 .net "D2", 15 0, o000001bfa77f80b8;  0 drivers
+o000001bfa77f83e8 .functor BUFZ 1, C4<z>; HiZ drive
+v000001bfa77e2f80_0 .net "M_DUMP", 0 0, o000001bfa77f83e8;  0 drivers
+o000001bfa77f80e8 .functor BUFZ 1, C4<z>; HiZ drive
+v000001bfa77e3020_0 .net "RESET", 0 0, o000001bfa77f80e8;  0 drivers
+v000001bfa77e3520_0 .var "clk", 0 0;
+S_000001bfa77f1900 .scope module, "cache" "Cache" 3 20, 4 22 0, S_000001bfa77f1770;
+ .timescale 0 0;
+    .port_info 0 /INPUT 1 "clk";
+    .port_info 1 /INPUT 1 "C_DUMP";
+    .port_info 2 /INPUT 1 "RESET";
+    .port_info 3 /INPUT 15 "A1";
+    .port_info 4 /INOUT 3 "C1";
+    .port_info 5 /INOUT 16 "D1";
+    .port_info 6 /INOUT 2 "C2";
+    .port_info 7 /INOUT 16 "D2";
+    .port_info 8 /OUTPUT 19 "A2";
+v000001bfa78bbe00_0 .net "A1", 14 0, o000001bfa77f7f98;  alias, 0 drivers
+v000001bfa77b2e10_0 .net "A2", 18 0, o000001bfa77f7fc8;  alias, 0 drivers
+v000001bfa77f1a90_0 .net "C1", 2 0, L_000001bfa77f6980;  alias, 1 drivers
+v000001bfa77f1b30_0 .net "C2", 1 0, o000001bfa77f8028;  alias, 0 drivers
+v000001bfa78bcfc0_0 .net "C_DUMP", 0 0, o000001bfa77f8058;  alias, 0 drivers
+v000001bfa78bd060_0 .net "D1", 15 0, o000001bfa77f8088;  alias, 0 drivers
+v000001bfa78bd100_0 .net "D2", 15 0, o000001bfa77f80b8;  alias, 0 drivers
+v000001bfa78bd1a0_0 .net "RESET", 0 0, o000001bfa77f80e8;  alias, 0 drivers
+v000001bfa78bd240_0 .net "clk", 0 0, v000001bfa77e3520_0;  1 drivers
+E_000001bfa77d7fd0 .event posedge, v000001bfa78bd240_0;
+S_000001bfa77b27b0 .scope module, "cpu" "CPU" 3 18, 5 11 0, S_000001bfa77f1770;
+ .timescale 0 0;
+    .port_info 0 /INPUT 1 "clk";
+    .port_info 1 /INOUT 16 "D1";
+    .port_info 2 /INOUT 3 "C1";
+    .port_info 3 /OUTPUT 15 "A1";
+L_000001bfa77f6980 .functor BUFZ 3, v000001bfa77e3a20_0, C4<000>, C4<000>, C4<000>;
+v000001bfa78bd2e0_0 .net "A1", 14 0, o000001bfa77f7f98;  alias, 0 drivers
+v000001bfa78bd380_0 .net "C1", 2 0, L_000001bfa77f6980;  alias, 1 drivers
+v000001bfa77b2940_0 .net "D1", 15 0, o000001bfa77f8088;  alias, 0 drivers
+v000001bfa77b29e0_0 .net "clk", 0 0, v000001bfa77e3520_0;  alias, 1 drivers
+v000001bfa77e3a20_0 .var "command", 2 0;
+S_000001bfa77b2a80 .scope module, "mem_ctr" "MemCTR" 3 23, 6 16 0, S_000001bfa77f1770;
+ .timescale 0 0;
+    .port_info 0 /INPUT 1 "clk";
+    .port_info 1 /INPUT 19 "A2";
+    .port_info 2 /INPUT 1 "M_DUMP";
+    .port_info 3 /INPUT 1 "RESET";
+    .port_info 4 /INOUT 16 "D2";
+    .port_info 5 /INOUT 2 "C2";
+v000001bfa77e3c00_0 .net "A2", 18 0, o000001bfa77f7fc8;  alias, 0 drivers
+v000001bfa77e3ac0_0 .net "C2", 1 0, o000001bfa77f8028;  alias, 0 drivers
+v000001bfa77e3980_0 .net "D2", 15 0, o000001bfa77f80b8;  alias, 0 drivers
+v000001bfa77e33e0_0 .net "M_DUMP", 0 0, o000001bfa77f83e8;  alias, 0 drivers
+v000001bfa77e3200_0 .net "RESET", 0 0, o000001bfa77f80e8;  alias, 0 drivers
+v000001bfa77e3b60_0 .net "clk", 0 0, v000001bfa77e3520_0;  alias, 1 drivers
+    .scope S_000001bfa77b27b0;
+T_0 ;
+    %pushi/vec4 3, 0, 3;
+    %store/vec4 v000001bfa77e3a20_0, 0, 3;
+    %end;
+    .thread T_0;
+    .scope S_000001bfa77b27b0;
+T_1 ;
+    %wait E_000001bfa77d7fd0;
+    %vpi_call/w 5 25 "$display", "%d on CPU", v000001bfa78bd380_0 {0 0 0};
+    %load/vec4 v000001bfa78bd380_0;
+    %dup/vec4;
+    %pushi/vec4 0, 0, 3;
+    %cmp/u;
+    %jmp/1 T_1.0, 6;
+    %dup/vec4;
+    %pushi/vec4 7, 0, 3;
+    %cmp/u;
+    %jmp/1 T_1.1, 6;
+    %jmp T_1.2;
+T_1.0 ;
+    %vpi_call/w 5 27 "$display", "no operation" {0 0 0};
+    %jmp T_1.2;
+T_1.1 ;
+    %vpi_call/w 5 28 "$display", "response recieved" {0 0 0};
+    %jmp T_1.2;
+T_1.2 ;
+    %pop/vec4 1;
+    ; show_stmt_assign_vector: Get l-value for compressed += operand
+    %load/vec4 v000001bfa77e3a20_0;
+    %pushi/vec4 1, 0, 3;
+    %add;
+    %store/vec4 v000001bfa77e3a20_0, 0, 3;
+    %jmp T_1;
+    .thread T_1;
+    .scope S_000001bfa77f1900;
+T_2 ;
+    %wait E_000001bfa77d7fd0;
+    %vpi_call/w 4 44 "$display", "%d on cache", v000001bfa77f1a90_0 {0 0 0};
+    %load/vec4 v000001bfa77f1a90_0;
+    %dup/vec4;
+    %pushi/vec4 0, 0, 3;
+    %cmp/u;
+    %jmp/1 T_2.0, 6;
+    %dup/vec4;
+    %pushi/vec4 1, 0, 3;
+    %cmp/u;
+    %jmp/1 T_2.1, 6;
+    %dup/vec4;
+    %pushi/vec4 2, 0, 3;
+    %cmp/u;
+    %jmp/1 T_2.2, 6;
+    %dup/vec4;
+    %pushi/vec4 3, 0, 3;
+    %cmp/u;
+    %jmp/1 T_2.3, 6;
+    %dup/vec4;
+    %pushi/vec4 4, 0, 3;
+    %cmp/u;
+    %jmp/1 T_2.4, 6;
+    %dup/vec4;
+    %pushi/vec4 5, 0, 3;
+    %cmp/u;
+    %jmp/1 T_2.5, 6;
+    %dup/vec4;
+    %pushi/vec4 6, 0, 3;
+    %cmp/u;
+    %jmp/1 T_2.6, 6;
+    %dup/vec4;
+    %pushi/vec4 7, 0, 3;
+    %cmp/u;
+    %jmp/1 T_2.7, 6;
+    %jmp T_2.8;
+T_2.0 ;
+    %vpi_call/w 4 48 "$display", "no operation recieved" {0 0 0};
+    %jmp T_2.8;
+T_2.1 ;
+    %vpi_call/w 4 52 "$display", "READ8 recieved" {0 0 0};
+    %delay 10, 0;
+    %jmp T_2.8;
+T_2.2 ;
+    %vpi_call/w 4 58 "$display", "READ8 recieved" {0 0 0};
+    %delay 10, 0;
+    %jmp T_2.8;
+T_2.3 ;
+    %vpi_call/w 4 63 "$display", "READ32 recieved" {0 0 0};
+    %delay 10, 0;
+    %jmp T_2.8;
+T_2.4 ;
+    %vpi_call/w 4 68 "$display", "INVALIDATE_LINE recieved" {0 0 0};
+    %jmp T_2.8;
+T_2.5 ;
+    %vpi_call/w 4 72 "$display", "WRITE8 recieved" {0 0 0};
+    %jmp T_2.8;
+T_2.6 ;
+    %vpi_call/w 4 76 "$display", "WRITE16 recieved" {0 0 0};
+    %jmp T_2.8;
+T_2.7 ;
+    %vpi_call/w 4 80 "$display", "WRITE32 recieved" {0 0 0};
+    %jmp T_2.8;
+T_2.8 ;
+    %pop/vec4 1;
+    %load/vec4 v000001bfa77f1b30_0;
+    %dup/vec4;
+    %pushi/vec4 1, 0, 2;
+    %cmp/u;
+    %jmp/1 T_2.9, 6;
+    %jmp T_2.10;
+T_2.9 ;
+    %vpi_call/w 4 87 "$display", "%b", v000001bfa78bd100_0 {0 0 0};
+    %jmp T_2.10;
+T_2.10 ;
+    %pop/vec4 1;
+    %jmp T_2;
+    .thread T_2;
+    .scope S_000001bfa77b2a80;
+T_3 ;
+    %wait E_000001bfa77d7fd0;
+    %load/vec4 v000001bfa77e3ac0_0;
+    %dup/vec4;
+    %pushi/vec4 0, 0, 2;
+    %cmp/u;
+    %jmp/1 T_3.0, 6;
+    %dup/vec4;
+    %pushi/vec4 2, 0, 2;
+    %cmp/u;
+    %jmp/1 T_3.1, 6;
+    %dup/vec4;
+    %pushi/vec4 3, 0, 2;
+    %cmp/u;
+    %jmp/1 T_3.2, 6;
+    %jmp T_3.3;
+T_3.0 ;
+    %vpi_call/w 6 32 "$display", "no operation" {0 0 0};
+    %jmp T_3.3;
+T_3.1 ;
+    %vpi_call/w 6 35 "$display", "READ_LINE on mem" {0 0 0};
+    %jmp T_3.3;
+T_3.2 ;
+    %vpi_call/w 6 38 "$display", "WRITE_LINE on mem" {0 0 0};
+    %jmp T_3.3;
+T_3.3 ;
+    %pop/vec4 1;
+    %jmp T_3;
+    .thread T_3;
+    .scope S_000001bfa77f1770;
+T_4 ;
+    %pushi/vec4 0, 0, 1;
+    %store/vec4 v000001bfa77e3520_0, 0, 1;
+    %end;
+    .thread T_4, $init;
+    .scope S_000001bfa77f1770;
+T_5 ;
+    %delay 1, 0;
+    %load/vec4 v000001bfa77e3520_0;
+    %inv;
+    %store/vec4 v000001bfa77e3520_0, 0, 1;
+    %jmp T_5;
+    .thread T_5;
+    .scope S_000001bfa77f1770;
+T_6 ;
+    %vpi_call/w 3 31 "$display", "my tests are working!!" {0 0 0};
+    %delay 50, 0;
+    %vpi_call/w 3 32 "$finish" {0 0 0};
+    %end;
+    .thread T_6;
+# The file index is used to find the file name in the following table.
+:file_names 7;
+    "N/A";
+    "<interactive>";
+    "-";
+    "my_test.sv";
+    "./cache_mem.sv";
+    "./CPU.sv";
+    "./mem_ctr.sv";
