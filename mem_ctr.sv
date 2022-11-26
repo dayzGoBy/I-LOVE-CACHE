@@ -24,20 +24,47 @@ module MemCTR(
 	);
 
 	reg [7:0] mem [0:`MEM_SIZE - 1];
+	reg [15:0] data2 = 16'bzzzzzzzzzzzzzzz;
+	reg [1:0] command2 = 2'bzz;
+
+	assign D2 = data2;
+	assign C2 = command2;
+
+	initial begin
+		for (int i = 0; i < `MEM_SIZE; i++) begin
+			mem [i] = i % 256;
+		end
+	end
 
 	always @(posedge clk)
 	begin
 		case (C2) 
 			`C2_NOP: begin
-				$display("no operation");
+				$display("MEM: no operation");
 			end
 			`C2_READ_LINE: begin
-				$display("READ_LINE on mem");
-				#100;
-
+				$display("MEM: READ_LINE recieved",);
+				$display("getting line %b", A2);
+				//#200;
+				command2 = 1;
+				data2 = 313;
+				for (int i = 0; i < 8; i++) begin
+					data2 [7:0] = mem [A2 << 4 + 2 * i];
+					data2[15:8] = mem [A2 << 4 + 2 * i + 1];
+					//TODO: little endian
+					#2;
+				end
 			end
 			`C2_WRITE_LINE: begin
-				$display("WRITE_LINE on mem");
+				$display("MEM: WRITE_LINE recieved",);
+				$display("writing line %b", A2);
+				#200;
+				for (int i = 0; i < 8; i++) begin
+					mem [A2 << 4 + 2 * i] = data2 [7:0];
+					mem [A2 << 4 + 2 * i + 1] = data2[15:8];
+					//TODO: little endian
+					//#2;
+				end
 			end
 		endcase
 	end

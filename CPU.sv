@@ -15,18 +15,34 @@ module CPU(
 	output [14:0] A1
 	);
 
-	reg [2:0] command;
-	assign C1 = command;
-	initial begin
-		command = 3'b011;
-	end
+	reg [2:0] command1 = 3'b000;
+	reg [14:0] address1 = 15'bzzzzzzzzzzzzzz;
+
+	assign C1 = command1;
+	assign A1 = address1;
+
+	reg [2:0] commands [0:4];
+	reg [14:0] addresses [0:4];
+	int cnt = 0;
 
 	always @(posedge clk) begin
-		$display("%d on CPU", C1);
 		case (C1) 
-			`C1_NOP: $display("no operation");
-			`C1_RESPONSE: $display("response recieved");
+			`C1_NOP: begin
+				$display("CPU: no operation");
+			end
+			`C1_RESPONSE: begin
+				$display("CPU: response recieved");
+			end
 		endcase
-		command++;
+
+		if (cnt == 0) begin
+			command1 = `C1_READ8;
+			address1 = 2'b11;
+			#4;
+			address1 = 2'b10;
+			#1;
+			command1 = 3'bzzz;
+		end
+		cnt++;
 	end
 endmodule

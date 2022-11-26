@@ -25,11 +25,16 @@ module test;
 
 	always begin
 		#1 clk = ~clk;
+		if (clk) begin
+			$display("--------------------WIRE INSTANCES----------------------");
+			$display("command1: %d | address1: %B | data1: %B", C1, A1, D1);
+			$display("command2: %d | address2: %B | data2: %B ", C2, A2, D2);
+			$display("--------------------------------------------------------");
+		end
 	end
 
 	initial	begin
-		$display("my tests are working!!");
-		#50 $finish;
+		#30 $finish;
 	end
 
 endmodule
