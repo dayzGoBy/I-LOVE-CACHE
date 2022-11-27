@@ -12,6 +12,9 @@
 `define C2_READ_LINE 2
 `define C2_WRITE_LINE 3
 `define C2_RESPONSE 1
+`define C2_DETHRONE 2'bzz
+`define D_DETHRONE 16'bzzzzzzzzzzzzzzz
+`define A_DETHRONE 15'bzzzzzzzzzzzzzzz
 
 module MemCTR(
 	input clk, 
@@ -24,15 +27,17 @@ module MemCTR(
 	);
 
 	reg [7:0] mem [0:`MEM_SIZE - 1];
-	reg [15:0] data2 = 16'bzzzzzzzzzzzzzzz;
-	reg [1:0] command2 = 2'bzz;
+	reg [15:0] data2 = `D_DETHRONE;
+	reg [1:0] command2 = `C2_DETHRONE;
+
+	int address;
 
 	assign D2 = data2;
 	assign C2 = command2;
 
-	initial begin
+	initial begin		
 		for (int i = 0; i < `MEM_SIZE; i++) begin
-			mem [i] = i % 256;
+			mem [i] = i % 7;
 		end
 	end
 
@@ -45,15 +50,21 @@ module MemCTR(
 			`C2_READ_LINE: begin
 				$display("MEM: READ_LINE recieved",);
 				$display("getting line %b", A2);
-				//#200;
-				command2 = 1;
-				data2 = 313;
+				address = A2;
+				#200;
+				command2 = `C2_RESPONSE;
 				for (int i = 0; i < 8; i++) begin
-					data2 [7:0] = mem [A2 << 4 + 2 * i];
-					data2[15:8] = mem [A2 << 4 + 2 * i + 1];
-					//TODO: little endian
+					for (int j = 0; j < 8; j++) begin
+						data2 [j] = mem [address << `CACHE_OFFSET_SIZE + 2 * i] [7 - j];
+					end
+					for (int j = 0; j < 8; j++) begin
+						data2 [8 + j] = mem [address << `CACHE_OFFSET_SIZE + 2 * i + 1] [7 - j];
+					end
 					#2;
 				end
+				#1;
+				command2 = `C2_DETHRONE;
+				data2 = `D_DETHRONE;
 			end
 			`C2_WRITE_LINE: begin
 				$display("MEM: WRITE_LINE recieved",);
