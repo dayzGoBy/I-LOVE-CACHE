@@ -40,7 +40,7 @@ module CPU(
 		endcase
 
 		if (cnt == 0) begin
-			command1 = `C1_READ8;
+			command1 = `C1_READ32;
 			address1 = 2'b11;
 			#4;
 			address1 = 2'b10;

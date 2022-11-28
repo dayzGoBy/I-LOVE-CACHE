@@ -1,29 +1,44 @@
-`include "nand2.sv"
+`include "CPU.sv"
+`include "cache_mem.sv"
+`include "mem_ctr.sv"
 
-module nand2_test;
-  reg[1:0] in_value;
-  wire out;
-  
-  nand2_switch not_instance(.out(out), .in1(in_value[1]), .in2(in_value[0]));
-  
-  typedef enum {C1_NOP=0, C1_RESPONSE=7} enum_set;
-    
+
+//iverilog -g2012 -o testbench.out testbench.sv && vvp testbench.out
+
+
+module test;
+  reg clk = 1'b0;
+
+  wire [14:0] A1;
+  wire [14:0] A2;
+  wire [15:0] D1, D2;
+  wire [2:0] C1;
+  wire [1:0] C2;
+
+  wire C_DUMP;
+  wire M_DUMP;
+  wire RESET;
+
+  CPU cpu(.clk(clk), .D1(D1), .C1(C1), .A1(A1));
+
+  Cache cache(.clk(clk), .C_DUMP(C_DUMP), .RESET(RESET), .A1(A1),
+    .C1(C1), .D1(D1), .C2(C2), .D2(D2), .A2(A2));
+
+  MemCTR mem_ctr(.clk(clk), .A2(A2), .M_DUMP(M_DUMP), .RESET(RESET),
+    .D2(D2), .C2(C2));
+
+  always begin
+    #1 clk = ~clk;
+    if (clk) begin
+      $display("--------------------WIRE INSTANCES----------------------");
+      $display("command1: %d | address1: %B | data1: %B", C1, A1, D1);
+      $display("command2: %d | address2: %B | data2: %B ", C2, A2, D2);
+      $display("--------------------------------------------------------");
+    end
+  end
+
   initial begin
-    $dumpfile("dump.vcd");
-    $dumpvars(1, nand2_test);
-    
-    $monitor("in:%b, out:%b", in_value, out);
-    
-    #1 in_value = 2'b00; 
-    #2 in_value = 2'b01; 
-    #3 in_value = 2'b10; 
-    #4 in_value = 2'b11; 
-  end 
-    
-  initial begin    
-    enum_set enum_var;  
-    enum_var = C1_NOP; $display ("enum_var {C1_NOP} = %0d", enum_var);
-    enum_var = C1_RESPONSE; $display ("enum_var {C1_RESPONSE} = %0d", enum_var);
-  end 	  
-  
+    #300 $finish;
+  end
+
 endmodule

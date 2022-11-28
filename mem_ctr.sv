@@ -70,8 +70,8 @@ module MemCTR(
 				address = A2;
 
 				for (int i = 0; i < 8; i++) begin
-					mem [A2 << `CACHE_OFFSET_SIZE + 2 * i] = data2 [15:8]; 
-					mem [A2 << `CACHE_OFFSET_SIZE + 2 * i + 1] = data2 [7:0]; 
+					mem [A2 << `CACHE_OFFSET_SIZE + 2 * i] = D2 [15:8]; 
+					mem [A2 << `CACHE_OFFSET_SIZE + 2 * i + 1] = D2 [7:0]; 
 					#2;
 				end
 				#200;
