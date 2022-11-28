@@ -51,16 +51,21 @@ module Cache(
 	int where;
 	int bytes_to_read;
 
-	//data is stored little-endian to simplify responding it to the CPU
 	reg [7:0] data [0:63] [0:16];
 	reg [9:0] tags [0:63];
-	reg [1:0] valid [0:63];
+	reg [1:0] valid_dirty [0:63]; // dirty := modifided but not stored; valid := line is not empty
 
 	assign C1 = command1;
 	assign C2 = command2;
 	assign A2 = address2;
 	assign D1 = data1;
 	assign D2 = data2;
+
+	initial begin
+		for (int i = 0; i < 64; i++) begin
+			valid_dirty [i] = 0;
+		end
+	end
 
 	always @(posedge clk) begin 
 		case (C1) 
@@ -98,6 +103,7 @@ module Cache(
 			`C1_READ16: begin
 				$display("CACHE: READ16 recieved"); 
 				bytes_to_read = 2;
+				//TODO: 2 bytes
 				$display("reading a byte on %b block", A1); 
 				tag = A1 >> 5;
 				set = A1 % 64;
@@ -129,10 +135,27 @@ module Cache(
 
 			`C1_INVALIDATE_LINE: begin
 				$display("CACHE: INVALIDATE_LINE recieved");
+				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
+					where = tags[set * 2] != tag;
+				end
+				valid_dirty [set * 2] = 0;
 			end
 
 			`C1_WRITE8: begin
 				$display("CACHE: WRITE8 recieved");
+				$display("writing a byte on %b block", A1); 
+				tag = A1 >> 5;
+				set = A1 % 64;
+				#2;
+				$display("offset equals to", A1 % 32);
+				offset = A1 % 32;
+				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
+					where = tags[set * 2] != tag;
+					data [set * 2 + where] [offset] = D1[7:0];
+					valid_dirty [set * 2 + where] [1] = 1;
+				end else begin
+					//че делать если бита нет в блоке
+				end
 			end
 
 			`C1_WRITE16: begin
@@ -148,14 +171,32 @@ module Cache(
 		case (C2)
 			`C2_RESPONSE: begin 
 				$display("CACHE: response recieved");
-				tags[set * 2] = tag;
+				//TODO: LRU
+				if (valid_dirty[set * 2][0] == 0 || valid_dirty[set * 2 + 1][0] == 0) begin
+					where = valid_dirty[set * 2][0] != 0;		
+				end else if (valid_dirty[set * 2][1] == 0 || valid_dirty[set * 2 + 1][1] == 0) begin
+					where = valid_dirty[set * 2][1] != 0;
+				end else begin
+					command2 = `C2_WRITE_LINE;
+					address2 = tag << `CACHE_SET_SIZE + set;
+					// по умолчанию из двух грязных линий пишем первую
+					for (int i = 0; i < 8; i++) begin
+						data2 [15:8] = data [set * 2] [i * 2]; 
+						data2 [7:0] = data [set * 2] [i * 2 + 1];
+						#2;
+					end
+					where = 0;
+				end
+
+				tags[set * 2 + where] = tag;
+				valid_dirty[set * 2 + where] [0] = 1;
 				for (int i = 0; i < 8; i++) begin
-					data[set * 2] [2 * i] = D2 [7:0];
-					data[set * 2] [2 * i + 1] = D2 [15:8];
+					data[set * 2 + where] [2 * i] = D2 [15:8];
+					data[set * 2 + where] [2 * i + 1] = D2 [7:0];
 					#2;
 				end
+				//TODO: separate cases of reading 8, 16, 32 bits
 				//bytes_to_read
-				where = tags[set * 2] != tag;
 				command1 = `C1_RESPONSE;
 				$display("%b", data [where + set * 2] [offset]);
 				data1 [7:0] = data [where + set * 2] [offset];

@@ -15,6 +15,7 @@
 `define C2_DETHRONE 2'bzz
 `define D_DETHRONE 16'bzzzzzzzzzzzzzzz
 `define A_DETHRONE 15'bzzzzzzzzzzzzzzz
+`define CACHE_OFFSET_SIZE 4
 
 module MemCTR(
 	input clk, 
@@ -31,13 +32,14 @@ module MemCTR(
 	reg [1:0] command2 = `C2_DETHRONE;
 
 	int address;
+	int SEED = 225526;
 
 	assign D2 = data2;
 	assign C2 = command2;
 
 	initial begin		
 		for (int i = 0; i < `MEM_SIZE; i++) begin
-			mem [i] = i % 7;
+			mem [i] = $random(SEED) >> 16;
 		end
 	end
 
@@ -54,12 +56,8 @@ module MemCTR(
 				#200;
 				command2 = `C2_RESPONSE;
 				for (int i = 0; i < 8; i++) begin
-					for (int j = 0; j < 8; j++) begin
-						data2 [j] = mem [address << `CACHE_OFFSET_SIZE + 2 * i] [7 - j];
-					end
-					for (int j = 0; j < 8; j++) begin
-						data2 [8 + j] = mem [address << `CACHE_OFFSET_SIZE + 2 * i + 1] [7 - j];
-					end
+					data2 [15:8] = mem [address << `CACHE_OFFSET_SIZE + 2 * i];
+					data2 [7:0] = mem [address << `CACHE_OFFSET_SIZE + 2 * i + 1];
 					#2;
 				end
 				#1;
@@ -69,13 +67,14 @@ module MemCTR(
 			`C2_WRITE_LINE: begin
 				$display("MEM: WRITE_LINE recieved",);
 				$display("writing line %b", A2);
-				#200;
+				address = A2;
+
 				for (int i = 0; i < 8; i++) begin
-					mem [A2 << 4 + 2 * i] = data2 [7:0];
-					mem [A2 << 4 + 2 * i + 1] = data2[15:8];
-					//TODO: little endian
-					//#2;
+					mem [A2 << `CACHE_OFFSET_SIZE + 2 * i] = data2 [15:8]; 
+					mem [A2 << `CACHE_OFFSET_SIZE + 2 * i + 1] = data2 [7:0]; 
+					#2;
 				end
+				#200;
 			end
 		endcase
 	end

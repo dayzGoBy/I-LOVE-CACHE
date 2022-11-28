@@ -35,6 +35,7 @@ module CPU(
 			end
 			`C1_RESPONSE: begin
 				$display("CPU: response recieved");
+
 			end
 		endcase
 
@@ -46,6 +47,8 @@ module CPU(
 			#1;
 			command1 = `C1_DETHRONE;
 			address1 = `A_DETHRONE;
+			#1;
+			while (C1 != `C1_RESPONSE) #1;
 		end
 		cnt++;
 	end
