@@ -108,6 +108,7 @@ void mmul()
 		reset_com();
 		#1;
 		wait (C1 == `C1_RESPONSE);
+		
 		command1 = `C1_READ32;
 		address1 = 1337;
 		#2;
