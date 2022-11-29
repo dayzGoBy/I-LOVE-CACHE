@@ -20,7 +20,7 @@ module test;
 
   // connecting my modules
   // the tests are in CPU
-  
+
   CPU cpu(.clk(clk), .D1(D1), .C1(C1), .A1(A1));
 
   Cache cache(.clk(clk), .C_DUMP(C_DUMP), .RESET(RESET), .A1(A1),
@@ -31,6 +31,7 @@ module test;
 
   always begin
     #1 clk = ~clk;
+    clk_cnt++;
     if (clk) begin // debug output of busses instances
       $display("--------------------WIRE INSTANCES----------------------");
       $display("command1: %d | address1: %B | data1: %B", C1, A1, D1);
@@ -40,7 +41,7 @@ module test;
   end
 
   initial begin
-    #230 $finish;
+    #270 $finish;
   end
 
 endmodule

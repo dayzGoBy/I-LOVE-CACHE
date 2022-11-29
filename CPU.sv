@@ -30,9 +30,14 @@
 `define A_DETHRONE 15'bzzzzzzzzzzzzzzz
 `define MEM_SIZE 524288
 `define SEED 225526
+`define M 64
+`define N 60
+`define K 32
+
 
 int miss_cnt;
 int all_cnt;
+int clk_cnt;
 
 module CPU(
 	input clk,
@@ -51,17 +56,74 @@ module CPU(
 	reg [`ADDR1_BUS_SIZE - 1:0] addresses [0:4];
 	int cnt = 0;
 
+
+	task reset_com();
+		#1;
+		command1 = `C1_DETHRONE;
+		address1 = `A_DETHRONE;
+	endtask
+
+/* TODO: перехуярить это в машинные команды
+
+#define M 64
+#define N 60
+#define K 32
+int8 a[M][K];
+int16 b[K][N];
+int32 c[M][N];
+ 
+void mmul()
+{
+  int8 *pa = a;
+  int32 *pc = c;
+  for (int y = 0; y < M; y++)
+  {
+    for (int x = 0; x < N; x++)
+    {
+      int16 *pb = b;
+      int32 s = 0;
+      for (int k = 0; k < K; k++)
+      {
+        s += pa[k] * pb[x];
+        pb += N;
+      }
+      pc[x] = s;
+    }
+    pa += K;
+    pc += N;
+  }
+}
+
+
+*/
+	reg [7:0] a[0:`M - 1][0:`K - 1];
+	reg [15:0] b[0:`K - 1][0:`N - 1];
+	reg [32:0] c[0:`M - 1][0:`N - 1];
+
 	initial begin
 		command1 = `C1_READ32;
 		address1 = 1337;
 		#2;
 		address1 = 8;
+		reset_com();
 		#1;
-		command1 = `C1_DETHRONE;
-		address1 = `A_DETHRONE;
+		wait (C1 == `C1_RESPONSE);
+		command1 = `C1_READ32;
+		address1 = 1337;
+		#2;
+		address1 = 8;
+		reset_com();
 		#1;
-		while (C1 != `C1_RESPONSE) #1;
+		wait (C1 == `C1_RESPONSE);
 
+
+		for (int y = 0; y < `M; y++) begin
+			for (int x = 0; x < `N; x++) begin			
+				for (int k = 0; k < `K; k++) begin
+					
+				end
+			end
+		end
 	end
 
 

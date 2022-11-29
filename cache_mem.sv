@@ -125,6 +125,7 @@ module Cache(
 		if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
 			where = tags[set * 2] != tag;
 		end else begin
+			miss_cnt++;
 			set_address();
 			reset_buses2();
 			wait(C2 == `C2_RESPONSE);
@@ -139,6 +140,7 @@ module Cache(
 		if (tags[set * 2] == tag || tags[set * 2 + 1] == tag) begin 
 			where = tags[set * 2] != tag;
 		end else begin
+			miss_cnt++;
 			set_address();
 			reset_buses2();
 			wait(C2 == `C2_RESPONSE);
