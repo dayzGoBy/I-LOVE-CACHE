@@ -18,7 +18,7 @@ module MemCTR(
 	assign C2 = command2;
 	int SEED;
 
-	task reset ();
+	task reset;
 		SEED = `SEED;
 		for (integer i = 0; i < `MEM_SIZE; i++) begin
 			mem [i] = $random(SEED) >> 16;
