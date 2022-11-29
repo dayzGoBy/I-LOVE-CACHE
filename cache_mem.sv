@@ -1,51 +1,24 @@
-`define CACHE_LINE_SIZE 16
-`define CACHE_LINE_COUNT 64
-`define CACHE_WAY 2
-`define CACHE_TAG_SIZE 10
-`define CACHE_SET_SIZE 5
-`define CACHE_OFFSET_SIZE 4
-`define CACHE_SET_COUNT 32
-`define CACHE_ADDR_SIZE 19
-`define C1_NOP 0
-`define C1_READ8 1  
-`define C1_READ16 2 
-`define C1_READ32 3
-`define C1_INVALIDATE_LINE 4
-`define C1_WRITE8 5
-`define C1_WRITE16 6
-`define C1_WRITE32 7
-`define C1_RESPONSE 7
-`define C2_NOP 0
-`define C2_READ_LINE 2
-`define C2_WRITE_LINE 3
-`define C2_RESPONSE 1
-`define C1_DETHRONE 3'bzzz
-`define C2_DETHRONE 2'bzz
-`define D_DETHRONE 16'bzzzzzzzzzzzzzzz
-`define A_DETHRONE 15'bzzzzzzzzzzzzzzz
-
-
 module Cache(
 	input clk,
 	input C_DUMP,
 	input RESET,
 
-	input [14:0] A1,
+	input [`ADDR1_BUS_SIZE - 1:0] A1,
 
-	inout [2:0] C1,
-	inout [15:0] D1,
-	inout [1:0] C2,
-	inout [15:0] D2,
+	inout [`CTR1_BUS_SIZE - 1:0] C1,
+	inout [`DATA_BUS_SIZE - 1:0] D1,
+	inout [`CTR2_BUS_SIZE - 1:0] C2,
+	inout [`DATA_BUS_SIZE - 1:0] D2,
 
-	output [14:0] A2
+	output [`ADDR1_BUS_SIZE - 1:0] A2
 	);
 	
 	// initializing buses
-	reg [2:0] command1 = `C1_DETHRONE;
-	reg [1:0] command2 = `C2_DETHRONE;
-	reg [14:0] address2 = `A_DETHRONE;
-	reg [15:0] data1 = `D_DETHRONE;
-	reg [15:0] data2 = `D_DETHRONE;
+	reg [`CTR1_BUS_SIZE - 1:0] command1 = `C1_DETHRONE;
+	reg [`CTR2_BUS_SIZE - 1:0] command2 = `C2_DETHRONE;
+	reg [`ADDR1_BUS_SIZE - 1:0] address2 = `A_DETHRONE;
+	reg [`DATA_BUS_SIZE - 1:0] data1 = `D_DETHRONE;
+	reg [`DATA_BUS_SIZE - 1:0] data2 = `D_DETHRONE;
 	
 	// useful variables
 	int tag;
@@ -54,12 +27,12 @@ module Cache(
 	int where;
 	int bytes_to_read;
 
-	reg [7:0] data [0:63] [0:15]; // useful data storage
-	reg [7:0] responded_line [0:15]; // a place to temporary save the mem's responce
+	reg [7:0] data [0:`CACHE_LINE_COUNT - 1] [0:`CACHE_LINE_SIZE - 1]; // useful data storage
+	reg [7:0] responded_line [0:`CACHE_LINE_SIZE - 1]; // a place to temporary save the mem's responce
 	reg [7:0] to_write [0:3]; // bytes recieved from cpu, but not written yet
-	reg [9:0] tags [0:63]; // line's tags
-	reg [1:0] valid_dirty [0:63]; // dirty := modifided but not stored; valid := line is not empty
-	reg last_used [0:31]; //for every cache-set we save the last used line
+	reg [`CACHE_TAG_SIZE - 1:0] tags [0:`CACHE_LINE_COUNT - 1]; // line's tags
+	reg [1:0] valid_dirty [0:`CACHE_LINE_COUNT - 1]; // dirty := modifided but not stored; valid := line is not empty
+	reg last_used [0:`CACHE_SET_COUNT - 1]; //for every cache-set we save the last used line
 	
 	// assigning registers where we write commands to buses
 	assign C1 = command1;

@@ -1,3 +1,16 @@
+`define CACHE_LINE_SIZE 16
+`define CACHE_LINE_COUNT 64
+`define CACHE_WAY 2
+`define CACHE_TAG_SIZE 10
+`define CACHE_SET_SIZE 5
+`define CACHE_OFFSET_SIZE 4
+`define CACHE_SET_COUNT 32
+`define CACHE_ADDR_SIZE 19
+`define ADDR1_BUS_SIZE 15
+`define ADDR2_BUS_SIZE 15
+`define CTR1_BUS_SIZE 3
+`define CTR2_BUS_SIZE 2
+`define DATA_BUS_SIZE 16
 `define C1_NOP 0
 `define C1_READ8 1  
 `define C1_READ16 2 
@@ -7,34 +20,41 @@
 `define C1_WRITE16 6
 `define C1_WRITE32 7
 `define C1_RESPONSE 7
+`define C2_NOP 0
+`define C2_READ_LINE 2
+`define C2_WRITE_LINE 3
+`define C2_RESPONSE 1
 `define C1_DETHRONE 3'bzzz
+`define C2_DETHRONE 2'bzz
 `define D_DETHRONE 16'bzzzzzzzzzzzzzzz
 `define A_DETHRONE 15'bzzzzzzzzzzzzzzz
+`define MEM_SIZE 524288
+`define SEED 225526
 
 int miss_cnt;
 int all_cnt;
 
 module CPU(
 	input clk,
-	inout [15:0] D1,
-	inout [2:0] C1,
-	output [14:0] A1
+	inout [`DATA_BUS_SIZE - 1:0] D1,
+	inout [`CTR1_BUS_SIZE - 1:0] C1,
+	output [`ADDR1_BUS_SIZE - 1:0] A1
 	);
 
-	reg [2:0] command1 = `C1_NOP;
-	reg [14:0] address1 = `A_DETHRONE;
+	reg [`CTR1_BUS_SIZE - 1:0] command1 = `C1_NOP;
+	reg [`ADDR1_BUS_SIZE - 1:0] address1 = `A_DETHRONE;
 
 	assign C1 = command1;
 	assign A1 = address1;
 
-	reg [2:0] commands [0:4];
-	reg [14:0] addresses [0:4];
+	reg [`CTR1_BUS_SIZE - 1:0] commands [0:4];
+	reg [`ADDR1_BUS_SIZE - 1:0] addresses [0:4];
 	int cnt = 0;
 
 	initial begin
 		command1 = `C1_READ32;
 		address1 = 1337;
-		#4;
+		#2;
 		address1 = 8;
 		#1;
 		command1 = `C1_DETHRONE;
