@@ -56,6 +56,7 @@ module Cache(
 
 	reg [7:0] data [0:63] [0:15]; // useful data storage
 	reg [7:0] responded_line [0:15]; // a place to temporary save the mem's responce
+	reg [7:0] to_write [0:3]; // bytes recieved from cpu, but not written yet
 	reg [9:0] tags [0:63]; // line's tags
 	reg [1:0] valid_dirty [0:63]; // dirty := modifided but not stored; valid := line is not empty
 	reg last_used [0:31]; //for every cache-set we save the last used line
@@ -141,6 +142,35 @@ module Cache(
 		command2 = `C2_READ_LINE;
 		address2 [14:5] = tag;
 		address2 [4:0] = set;
+	endtask
+
+	task write_line();
+		for (int i = 0; i < 8; i++) begin
+			responded_line [2 * i] = D2 [15:8];
+			responded_line [2 * i + 1] = D2 [7:0];
+			#2;
+		end
+		if (valid_dirty[set * 2][0] == 0 || valid_dirty[set * 2 + 1][0] == 0) begin
+			where = valid_dirty[set * 2][0] != 0;		
+		end else begin
+			where = ~last_used [set];
+			if (valid_dirty [set * 2 + where] == 1) begin
+				command2 = `C2_WRITE_LINE;
+				address2 = tag << `CACHE_SET_SIZE + set;
+				for (int i = 0; i < 8; i++) begin
+					data2 [15:8] = data [set * 2 + where] [i * 2]; 
+					data2 [7:0] = data [set * 2 + where] [i * 2 + 1];
+					#2;
+				end
+			end
+		end
+
+		tags[set * 2 + where] = tag;
+		valid_dirty[set * 2 + where] [0] = 1;
+		for (int i = 0; i < 16; i++) begin
+			data [set * 2 + where] [i] = responded_line [i];
+		end
+		valid_dirty [set * 2 + where] = 2'b10;
 	endtask
 
 	initial begin
@@ -234,10 +264,13 @@ module Cache(
 
 				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
 					where = tags[set * 2] != tag;
-					write8();
 				end else begin
-					//че делать если бита нет в блоке
+					set_address();
+					reset_buses2();
+					wait(C2 == `C2_RESPONSE);
+					write_line();
 				end
+				write8();
 			end
 
 			`C1_WRITE16: begin
@@ -247,10 +280,13 @@ module Cache(
 
 				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
 					where = tags[set * 2] != tag;
-					write16();
 				end else begin
-					//че делать если бита нет в блоке
+					set_address();
+					reset_buses2();
+					wait(C2 == `C2_RESPONSE);
+					write_line();
 				end
+				write16();
 			end
 
 			`C1_WRITE32: begin
@@ -260,11 +296,13 @@ module Cache(
 
 				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
 					where = tags[set * 2] != tag;
-					write32();
 				end else begin
 					set_address();
 					reset_buses2();
+					wait(C2 == `C2_RESPONSE);
+					write_line();
 				end
+				write32();
 			end
 
 		endcase
@@ -272,34 +310,8 @@ module Cache(
 		case (C2)
 			`C2_RESPONSE: begin 
 				$display("CACHE: response recieved");
-				//TODO: LRU
-				for (int i = 0; i < 8; i++) begin
-					responded_line [2 * i] = D2 [15:8];
-					responded_line [2 * i + 1] = D2 [7:0];
-					#2;
-				end
-				if (valid_dirty[set * 2][0] == 0 || valid_dirty[set * 2 + 1][0] == 0) begin
-					where = valid_dirty[set * 2][0] != 0;		
-				end else begin
-					where = ~last_used [set];
-					if (valid_dirty [set * 2 + where] == 1) begin
-						command2 = `C2_WRITE_LINE;
-						address2 = tag << `CACHE_SET_SIZE + set;
-						for (int i = 0; i < 8; i++) begin
-							data2 [15:8] = data [set * 2 + where] [i * 2]; 
-							data2 [7:0] = data [set * 2 + where] [i * 2 + 1];
-							#2;
-						end
-
-					end
-				end
-
-				tags[set * 2 + where] = tag;
-				valid_dirty[set * 2 + where] [0] = 1;
-				for (int i = 0; i < 16; i++) begin
-					data [set * 2 + where] [i] = responded_line [i];
-				end
-				valid_dirty [set * 2 + where] = 2'b10;
+				write_line();
+				
 				command1 = `C1_RESPONSE;
 				case (bytes_to_read) 
 					1: send8();
