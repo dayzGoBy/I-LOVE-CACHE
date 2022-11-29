@@ -69,12 +69,13 @@ module Cache(
 	assign D2 = data2;
 
 	// reset makes all lines invalide
-	function void reset();
+	task reset();
 		for (int i = 0; i < 64; i++) begin
 			valid_dirty [i] = 0;
 		end
-	endfunction
+	endtask
 
+	// give ownership to another 
 	task reset_buses2();
 		#1;
 		command2 = `C2_DETHRONE;
@@ -98,15 +99,18 @@ module Cache(
 		#6;
 	endtask
 
+	//tasks that send to CPU
 	task send8 ();
 		command1 = `C1_RESPONSE;
 		data1 [7:0] = data [where + set * 2] [offset];
+		last_used [set] = where;
 	endtask
 
 	task send16 ();
 		command1 = `C1_RESPONSE;
 		data1 [15:8] = data [where + set * 2] [offset];
 		data1 [7:0] = data [where + set * 2] [offset + 1];
+		last_used [set] = where;
 	endtask
 
 	task send32 ();
@@ -116,17 +120,21 @@ module Cache(
 		#2;
 		data1 [15:8] = data [where + set * 2] [offset + 2];
 		data1 [7:0] = data [where + set * 2] [offset + 3];
+		last_used [set] = where;
 	endtask
 
+	// task that rewrite data
 	task write8 ();
 		data [set * 2 + where] [offset] = D1[7:0];
 		valid_dirty [set * 2 + where] [1] = 1;
+		last_used [set] = where;
 	endtask
 
 	task write16 ();
 		data [set * 2 + where] [offset] = D1[15:8];
 		data [set * 2 + where] [offset + 1] = D1[7:0];
 		valid_dirty [set * 2 + where] [1] = 1;
+		last_used [set] = where;
 	endtask
 
 	task write32 ();
@@ -136,6 +144,33 @@ module Cache(
 		data [set * 2 + where] [offset + 2] = D1[15:8];
 		data [set * 2 + where] [offset + 3] = D1[7:0];
 		valid_dirty [set * 2 + where] [1] = 1;
+		last_used [set] = where;
+	endtask
+
+	task ask_for_data();
+		read_address();
+		if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
+			where = tags[set * 2] != tag;
+		end else begin
+			set_address();
+			reset_buses2();
+			wait(C2 == `C2_RESPONSE);
+			write_line();
+		end
+	endtask
+
+	task get_asked_data();
+		read_address();
+
+		// we look for the byte in the set
+		if (tags[set * 2] == tag || tags[set * 2 + 1] == tag) begin 
+			where = tags[set * 2] != tag;
+		end else begin
+			set_address();
+			reset_buses2();
+			wait(C2 == `C2_RESPONSE);
+			write_line();
+		end
 	endtask
 
 	task set_address();
@@ -150,9 +185,11 @@ module Cache(
 			responded_line [2 * i + 1] = D2 [7:0];
 			#2;
 		end
+		// check for validness
 		if (valid_dirty[set * 2][0] == 0 || valid_dirty[set * 2 + 1][0] == 0) begin
 			where = valid_dirty[set * 2][0] != 0;		
 		end else begin
+			// LRU
 			where = ~last_used [set];
 			if (valid_dirty [set * 2 + where] == 1) begin
 				command2 = `C2_WRITE_LINE;
@@ -163,6 +200,7 @@ module Cache(
 					#2;
 				end
 			end
+			last_used [set] = ~last_used [set];
 		end
 
 		tags[set * 2 + where] = tag;
@@ -191,56 +229,23 @@ module Cache(
 			end
 
 			`C1_READ8:  begin
-				bytes_to_read = 1;
-
 				$display("CACHE: READ8 recieved"); 
-				read_address();
-
-				// we look for the byte in the set
-				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
-					where = tags[set * 2] != tag;
-					send8();
-				end else begin
-					// if we miss, go to mem for demanded data
-					set_address();
-					reset_buses2();
-				end
+				get_asked_data();
+				send8();
 				reset_buses1();
 			end
 
 			`C1_READ16: begin
 				$display("CACHE: READ16 recieved"); 
-				bytes_to_read = 2;
-				$display("reading a byte on %b block", A1); 
-
-				read_address();
-
-				// we look for the byte in the set
-				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
-					where = tags[set * 2] != tag;
-					send16();
-				end else begin
-					set_address();
-					reset_buses2();
-				end
+				get_asked_data();
+				send16();
 				reset_buses1();
 			end
 
 			`C1_READ32: begin
 				$display("CACHE: READ32 recieved");
-				bytes_to_read = 4;
-				$display("reading a byte on %b block", A1); 
-
-				read_address();
-
-				// we look for the byte in the set
-				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag) begin 
-					where = tags[set * 2] != tag;
-					send32();
-				end else begin
-					set_address();
-					reset_buses2();
-				end
+				get_asked_data();
+				send32();
 				reset_buses1();
 			end
 
@@ -260,68 +265,23 @@ module Cache(
 				$display("CACHE: WRITE8 recieved");
 				$display("writing a byte on %b block", A1); 
 
-				read_address();
-
-				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
-					where = tags[set * 2] != tag;
-				end else begin
-					set_address();
-					reset_buses2();
-					wait(C2 == `C2_RESPONSE);
-					write_line();
-				end
+				ask_for_data();
 				write8();
 			end
 
 			`C1_WRITE16: begin
 				$display("CACHE: WRITE16 recieved");
 
-				read_address();
-
-				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
-					where = tags[set * 2] != tag;
-				end else begin
-					set_address();
-					reset_buses2();
-					wait(C2 == `C2_RESPONSE);
-					write_line();
-				end
+				ask_for_data();
 				write16();
 			end
 
 			`C1_WRITE32: begin
 				$display("CACHE: WRITE32 recieved");
-				
-				read_address();
 
-				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
-					where = tags[set * 2] != tag;
-				end else begin
-					set_address();
-					reset_buses2();
-					wait(C2 == `C2_RESPONSE);
-					write_line();
-				end
+				ask_for_data();
 				write32();
 			end
-
 		endcase
-
-		case (C2)
-			`C2_RESPONSE: begin 
-				$display("CACHE: response recieved");
-				write_line();
-				
-				command1 = `C1_RESPONSE;
-				case (bytes_to_read) 
-					1: send8();
-					2: send16();
-					4: send32();
-				endcase				
-				reset_buses1();
-			end
-		endcase
-
 	end
-
 endmodule

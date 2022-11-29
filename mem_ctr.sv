@@ -16,6 +16,7 @@
 `define D_DETHRONE 16'bzzzzzzzzzzzzzzz
 `define A_DETHRONE 15'bzzzzzzzzzzzzzzz
 `define CACHE_OFFSET_SIZE 4
+`define SEED 225526
 
 module MemCTR(
 	input clk, 
@@ -35,16 +36,22 @@ module MemCTR(
 
 	assign D2 = data2;
 	assign C2 = command2;
+	int SEED;
 
-	int SEED = 225526;
-	initial begin // the initializing algorithm remains the same	
+	task reset ();
+		SEED = `SEED;
 		for (integer i = 0; i < `MEM_SIZE; i++) begin
 			mem [i] = $random(SEED) >> 16;
 		end
+	endtask
+
+	initial begin
+		reset();
 	end
 
 	always @(posedge clk)
 	begin
+		if (RESET) reset();
 		if (M_DUMP) begin
 			$dumpfile("mem_dump.vcd");
     		$dumpvars(1, MemCTR);
