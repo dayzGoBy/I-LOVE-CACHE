@@ -11,6 +11,9 @@
 `define D_DETHRONE 16'bzzzzzzzzzzzzzzz
 `define A_DETHRONE 15'bzzzzzzzzzzzzzzz
 
+int miss_cnt;
+int all_cnt;
+
 module CPU(
 	input clk,
 	inout [15:0] D1,
@@ -28,6 +31,20 @@ module CPU(
 	reg [14:0] addresses [0:4];
 	int cnt = 0;
 
+	initial begin
+		command1 = `C1_READ32;
+		address1 = 1337;
+		#4;
+		address1 = 8;
+		#1;
+		command1 = `C1_DETHRONE;
+		address1 = `A_DETHRONE;
+		#1;
+		while (C1 != `C1_RESPONSE) #1;
+
+	end
+
+
 	always @(posedge clk) begin
 		case (C1) 
 			`C1_NOP: begin
@@ -35,21 +52,7 @@ module CPU(
 			end
 			`C1_RESPONSE: begin
 				$display("CPU: response recieved");
-
 			end
 		endcase
-
-		if (cnt == 0) begin
-			command1 = `C1_READ32;
-			address1 = 2'b11;
-			#4;
-			address1 = 2'b10;
-			#1;
-			command1 = `C1_DETHRONE;
-			address1 = `A_DETHRONE;
-			#1;
-			while (C1 != `C1_RESPONSE) #1;
-		end
-		cnt++;
 	end
 endmodule

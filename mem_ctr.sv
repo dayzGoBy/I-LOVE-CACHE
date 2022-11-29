@@ -19,7 +19,7 @@
 
 module MemCTR(
 	input clk, 
-	input [14:0] A2, // мы читаем линию - значит без оффсета
+	input [14:0] A2,
 	input M_DUMP,
 	input RESET,
 
@@ -32,19 +32,24 @@ module MemCTR(
 	reg [1:0] command2 = `C2_DETHRONE;
 
 	int address;
-	int SEED = 225526;
 
 	assign D2 = data2;
 	assign C2 = command2;
 
-	initial begin		
-		for (int i = 0; i < `MEM_SIZE; i++) begin
+	int SEED = 225526;
+	initial begin // the initializing algorithm remains the same	
+		for (integer i = 0; i < `MEM_SIZE; i++) begin
 			mem [i] = $random(SEED) >> 16;
 		end
 	end
 
 	always @(posedge clk)
 	begin
+		if (M_DUMP) begin
+			$dumpfile("mem_dump.vcd");
+    		$dumpvars(1, MemCTR);
+		end
+
 		case (C2) 
 			`C2_NOP: begin
 				$display("MEM: no operation");
@@ -56,8 +61,8 @@ module MemCTR(
 				#200;
 				command2 = `C2_RESPONSE;
 				for (int i = 0; i < 8; i++) begin
-					data2 [15:8] = mem [address << `CACHE_OFFSET_SIZE + 2 * i];
-					data2 [7:0] = mem [address << `CACHE_OFFSET_SIZE + 2 * i + 1];
+					data2 [15:8] = mem [(address << (`CACHE_OFFSET_SIZE) + 2 * i) % `MEM_SIZE];
+					data2 [7:0] = mem [(address << (`CACHE_OFFSET_SIZE) + 2 * i + 1) % `MEM_SIZE];
 					#2;
 				end
 				#1;
@@ -74,9 +79,8 @@ module MemCTR(
 					mem [A2 << `CACHE_OFFSET_SIZE + 2 * i + 1] = D2 [7:0]; 
 					#2;
 				end
-				#200;
+				#184; // don't ask me why
 			end
 		endcase
 	end
-
 endmodule

@@ -38,7 +38,7 @@ module test;
   end
 
   initial begin
-    #300 $finish;
+    #230 $finish;
   end
 
 endmodule
