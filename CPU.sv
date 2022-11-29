@@ -57,7 +57,7 @@ module CPU(
 	int cnt = 0;
 
 
-	task reset_com();
+	task reset_com;
 		#1;
 		command1 = `C1_DETHRONE;
 		address1 = `A_DETHRONE;
@@ -108,7 +108,7 @@ void mmul()
 		reset_com();
 		#1;
 		wait (C1 == `C1_RESPONSE);
-		
+
 		command1 = `C1_READ32;
 		address1 = 1337;
 		#2;

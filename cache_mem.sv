@@ -42,26 +42,26 @@ module Cache(
 	assign D2 = data2;
 
 	// reset makes all lines invalide
-	task reset();
+	task reset;
 		for (int i = 0; i < 64; i++) begin
 			valid_dirty [i] = 0;
 		end
 	endtask
 
 	// give ownership to another 
-	task reset_buses2();
+	task reset_buses2;
 		#1;
 		command2 = `C2_DETHRONE;
 		address2 = `A_DETHRONE;
 	endtask
 
-	task reset_buses1();
+	task reset_buses1;
 		#1;
 		command1 = `C1_DETHRONE;
 		data1 = `D_DETHRONE;
 	endtask
 
-	task read_address();
+	task read_address;
 		$display("reading a byte on %b block", A1); 
 		// recieving the address
 		tag = A1 >> `CACHE_SET_SIZE;
@@ -73,20 +73,20 @@ module Cache(
 	endtask
 
 	//tasks that send to CPU
-	task send8 ();
+	task send8;
 		command1 = `C1_RESPONSE;
 		data1 [7:0] = data [where + set * 2] [offset];
 		last_used [set] = where;
 	endtask
 
-	task send16 ();
+	task send16;
 		command1 = `C1_RESPONSE;
 		data1 [15:8] = data [where + set * 2] [offset];
 		data1 [7:0] = data [where + set * 2] [offset + 1];
 		last_used [set] = where;
 	endtask
 
-	task send32 ();
+	task send32;
 		command1 = `C1_RESPONSE;
 		data1 [15:8] = data [where + set * 2] [offset];
 		data1 [7:0] = data [where + set * 2] [offset + 1];
@@ -97,20 +97,20 @@ module Cache(
 	endtask
 
 	// task that rewrite data
-	task write8 ();
+	task write8;
 		data [set * 2 + where] [offset] = D1[7:0];
 		valid_dirty [set * 2 + where] [1] = 1;
 		last_used [set] = where;
 	endtask
 
-	task write16 ();
+	task write16;
 		data [set * 2 + where] [offset] = D1[15:8];
 		data [set * 2 + where] [offset + 1] = D1[7:0];
 		valid_dirty [set * 2 + where] [1] = 1;
 		last_used [set] = where;
 	endtask
 
-	task write32 ();
+	task write32;
 		data [set * 2 + where] [offset] = D1[15:8];
 		data [set * 2 + where] [offset + 1] = D1[7:0];
 		#2;
@@ -120,7 +120,7 @@ module Cache(
 		last_used [set] = where;
 	endtask
 
-	task ask_for_data();
+	task ask_for_data;
 		read_address();
 		if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
 			where = tags[set * 2] != tag;
@@ -133,7 +133,7 @@ module Cache(
 		end
 	endtask
 
-	task get_asked_data();
+	task get_asked_data;
 		read_address();
 
 		// we look for the byte in the set
@@ -148,13 +148,13 @@ module Cache(
 		end
 	endtask
 
-	task set_address();
+	task set_address;
 		command2 = `C2_READ_LINE;
 		address2 [14:5] = tag;
 		address2 [4:0] = set;
 	endtask
 
-	task write_line();
+	task write_line;
 		for (int i = 0; i < 8; i++) begin
 			responded_line [2 * i] = D2 [15:8];
 			responded_line [2 * i + 1] = D2 [7:0];
