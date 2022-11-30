@@ -48,7 +48,9 @@ module CPU(
 
 	reg [`CTR1_BUS_SIZE - 1:0] command1 = `C1_NOP;
 	reg [`ADDR1_BUS_SIZE - 1:0] address1 = `A_DETHRONE;
+	reg [`DATA_BUS_SIZE - 1:0] data1 = `D_DETHRONE;
 
+	assign D1 = data1;
 	assign C1 = command1;
 	assign A1 = address1;
 
@@ -61,6 +63,7 @@ module CPU(
 		#1;
 		command1 = `C1_DETHRONE;
 		address1 = `A_DETHRONE;
+		data1 = `D_DETHRONE;
 	endtask
 
 /* TODO: перехуярить это в машинные команды
@@ -101,15 +104,18 @@ void mmul()
 	reg [32:0] c[0:`M - 1][0:`N - 1];
 
 	initial begin
-		command1 = `C1_READ32;
+		command1 = `C1_WRITE8;
 		address1 = 1337;
 		#2;
 		address1 = 8;
+		data1 = 228;
 		reset_com();
 		#1;
-		wait (C1 == `C1_RESPONSE);
+		wait (C1 == `C1_NOP);
 
-		command1 = `C1_READ32;
+		#8;
+
+		command1 = `C1_READ8;
 		address1 = 1337;
 		#2;
 		address1 = 8;
@@ -125,6 +131,9 @@ void mmul()
 				end
 			end
 		end
+
+		#10;
+		$finish;
 	end
 
 

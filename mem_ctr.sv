@@ -9,13 +9,14 @@ module MemCTR(
 	);
 
 	reg [7:0] mem [0:`MEM_SIZE - 1];
+
 	reg [`DATA_BUS_SIZE - 1:0] data2 = `D_DETHRONE;
 	reg [`CTR2_BUS_SIZE - 1:0] command2 = `C2_DETHRONE;
 
-	int address;
-
 	assign D2 = data2;
 	assign C2 = command2;
+
+	int address;
 	int SEED;
 
 	task reset;

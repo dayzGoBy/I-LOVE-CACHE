@@ -19,13 +19,13 @@ module Cache(
 	reg [`ADDR1_BUS_SIZE - 1:0] address2 = `A_DETHRONE;
 	reg [`DATA_BUS_SIZE - 1:0] data1 = `D_DETHRONE;
 	reg [`DATA_BUS_SIZE - 1:0] data2 = `D_DETHRONE;
-	
-	// useful variables
-	int tag;
-	int set;
-	int offset;
-	int where;
-	int bytes_to_read;
+
+	// assigning registers where we write commands to buses
+	assign C1 = command1;
+	assign C2 = command2;
+	assign A2 = address2;
+	assign D1 = data1;
+	assign D2 = data2;
 
 	reg [7:0] data [0:`CACHE_LINE_COUNT - 1] [0:`CACHE_LINE_SIZE - 1]; // useful data storage
 	reg [7:0] responded_line [0:`CACHE_LINE_SIZE - 1]; // a place to temporary save the mem's responce
@@ -33,13 +33,13 @@ module Cache(
 	reg [`CACHE_TAG_SIZE - 1:0] tags [0:`CACHE_LINE_COUNT - 1]; // line's tags
 	reg [1:0] valid_dirty [0:`CACHE_LINE_COUNT - 1]; // dirty := modifided but not stored; valid := line is not empty
 	reg last_used [0:`CACHE_SET_COUNT - 1]; //for every cache-set we save the last used line
-	
-	// assigning registers where we write commands to buses
-	assign C1 = command1;
-	assign C2 = command2;
-	assign A2 = address2;
-	assign D1 = data1;
-	assign D2 = data2;
+
+	// useful variables
+	int tag;
+	int set;
+	int offset;
+	int where;
+	int bytes_to_read;
 
 	// reset makes all lines invalide
 	task reset;
@@ -62,14 +62,13 @@ module Cache(
 	endtask
 
 	task read_address;
-		$display("reading a byte on %b block", A1); 
+		$display("byte on %b block", A1); 
 		// recieving the address
 		tag = A1 >> `CACHE_SET_SIZE;
 		set = A1 % `CACHE_SET_COUNT;
 		#2;
 		$display("offset equals to", A1 % 32);
 		offset = A1 % `CACHE_LINE_SIZE;
-		#6;
 	endtask
 
 	//tasks that send to CPU
@@ -98,34 +97,52 @@ module Cache(
 
 	// task that rewrite data
 	task write8;
-		data [set * 2 + where] [offset] = D1[7:0];
+		data [set * 2 + where] [offset] = to_write[0];
 		valid_dirty [set * 2 + where] [1] = 1;
 		last_used [set] = where;
+	endtask
+
+	task get8;
+		to_write [0] = D1[7:0];
 	endtask
 
 	task write16;
-		data [set * 2 + where] [offset] = D1[15:8];
-		data [set * 2 + where] [offset + 1] = D1[7:0];
+		data [set * 2 + where] [offset] = to_write[0];
+		data [set * 2 + where] [offset + 1] = to_write[1];
 		valid_dirty [set * 2 + where] [1] = 1;
 		last_used [set] = where;
+	endtask
+
+	task get16;
+		to_write [0] = D1[15:8];
+		to_write [1] = D1[7:0];
 	endtask
 
 	task write32;
-		data [set * 2 + where] [offset] = D1[15:8];
-		data [set * 2 + where] [offset + 1] = D1[7:0];
+		data [set * 2 + where] [offset] = to_write[0];
+		data [set * 2 + where] [offset + 1] = to_write[1];
 		#2;
-		data [set * 2 + where] [offset + 2] = D1[15:8];
-		data [set * 2 + where] [offset + 3] = D1[7:0];
+		data [set * 2 + where] [offset + 2] = to_write[2];
+		data [set * 2 + where] [offset + 3] = to_write[3];
 		valid_dirty [set * 2 + where] [1] = 1;
 		last_used [set] = where;
 	endtask
 
+	task get32;
+		to_write [0] = D1[15:8];
+		to_write [1] = D1[7:0];
+		#2;
+		to_write [2] = D1[15:8];
+		to_write [3] = D1[7:0];
+	endtask
+
 	task ask_for_data;
-		read_address();
+		#8;
 		if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
 			where = tags[set * 2] != tag;
 		end else begin
 			miss_cnt++;
+			#4;
 			set_address();
 			reset_buses2();
 			wait(C2 == `C2_RESPONSE);
@@ -135,12 +152,13 @@ module Cache(
 
 	task get_asked_data;
 		read_address();
-
+		#8;
 		// we look for the byte in the set
 		if (tags[set * 2] == tag || tags[set * 2 + 1] == tag) begin 
 			where = tags[set * 2] != tag;
 		end else begin
 			miss_cnt++;
+			#4;
 			set_address();
 			reset_buses2();
 			wait(C2 == `C2_RESPONSE);
@@ -174,6 +192,7 @@ module Cache(
 					data2 [7:0] = data [set * 2 + where] [i * 2 + 1];
 					#2;
 				end
+				reset_buses2();
 			end
 			last_used [set] = ~last_used [set];
 		end
@@ -184,6 +203,12 @@ module Cache(
 			data [set * 2 + where] [i] = responded_line [i];
 		end
 		valid_dirty [set * 2 + where] = 2'b10;
+	endtask
+
+	task send_nop;
+		command1 = `C1_NOP;
+		#1;
+		command1= `D_DETHRONE;
 	endtask
 
 	initial begin
@@ -238,24 +263,31 @@ module Cache(
 
 			`C1_WRITE8: begin
 				$display("CACHE: WRITE8 recieved");
-				$display("writing a byte on %b block", A1); 
-
+				read_address();
+				get8();
 				ask_for_data();
 				write8();
+				send_nop();
 			end
 
 			`C1_WRITE16: begin
 				$display("CACHE: WRITE16 recieved");
 
+				read_address();
+				get16();
 				ask_for_data();
 				write16();
+				send_nop();
 			end
 
 			`C1_WRITE32: begin
 				$display("CACHE: WRITE32 recieved");
 
+				read_address();
+				get32();
 				ask_for_data();
 				write32();
+				send_nop();
 			end
 		endcase
 	end
