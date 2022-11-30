@@ -49,8 +49,8 @@ module MemCTR(
 				#200;
 				command2 = `C2_RESPONSE;
 				for (int i = 0; i < 8; i++) begin
-					data2 [15:8] = mem [(address << (`CACHE_OFFSET_SIZE) + 2 * i) % `MEM_SIZE];
-					data2 [7:0] = mem [(address << (`CACHE_OFFSET_SIZE) + 2 * i + 1) % `MEM_SIZE];
+					data2 [15:8] = mem [address << `CACHE_OFFSET_SIZE + 2 * i];
+					data2 [7:0] = mem [address << `CACHE_OFFSET_SIZE + 2 * i + 1];
 					#2;
 				end
 				#1;
