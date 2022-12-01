@@ -269,10 +269,8 @@ module Cache(
 
 			`C1_INVALIDATE_LINE: begin
 				//$display("CACHE: INVALIDATE_LINE recieved");
-
 				tag = A1 >> `CACHE_SET_SIZE;
 				set = A1 % `CACHE_SET_COUNT;
-
 				if (tags[set * 2] == tag || tags[set * 2 + 1] == tag)	begin 
 					where = tags[set * 2] != tag;
 					valid_dirty [set * 2 + where] = 0;
@@ -290,7 +288,6 @@ module Cache(
 
 			`C1_WRITE16: begin
 				//$display("CACHE: WRITE16 recieved");
-
 				read_address();
 				get16();
 				ask_for_data();
@@ -300,7 +297,6 @@ module Cache(
 
 			`C1_WRITE32: begin
 				//$display("CACHE: WRITE32 recieved");
-
 				read_address();
 				get32();
 				ask_for_data();

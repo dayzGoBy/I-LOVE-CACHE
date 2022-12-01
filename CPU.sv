@@ -117,6 +117,7 @@ module CPU(
 				for (int k = 0; k < `K; k++) begin
 					pa_k(pa, k);
 					pb_x(pb, x);
+					#10
 					pb += 2 * `N;
 				end
 				pc_x(pc, x);
