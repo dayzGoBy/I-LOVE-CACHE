@@ -37,6 +37,7 @@
 
 int miss_cnt;
 int all_cnt;
+int hit_cnt;
 int clk_cnt;
 
 module CPU(
@@ -54,85 +55,79 @@ module CPU(
 	assign C1 = command1;
 	assign A1 = address1;
 
-	reg [`CTR1_BUS_SIZE - 1:0] commands [0:4];
-	reg [`ADDR1_BUS_SIZE - 1:0] addresses [0:4];
 	int cnt = 0;
 
+	int a_begin_mem = 0;
+	int b_begin_mem = `M * `K;
+	int c_begin_mem = 2 * `K * `N + b_begin_mem;
 
-	task reset_com;
+	int pa = a_begin_mem;
+	int pb = b_begin_mem;
+	int pc = c_begin_mem;
+
+	task reset_busses;
 		#1;
 		command1 = `C1_DETHRONE;
 		address1 = `A_DETHRONE;
 		data1 = `D_DETHRONE;
+		#1;
 	endtask
 
-/* TODO: перехуярить это в машинные команды
+	task pa_k (int pa_p, int k);
+		#1;
+		command1 = `C1_READ8;
+		address1 = (pa_p + k) >> 4;
+		#2;
+		address1 = (pa_p + k) % 16;
+		#1;
+		reset_busses();
+		wait(C1 == `C1_RESPONSE);
+		#1;
+	endtask
 
-#define M 64
-#define N 60
-#define K 32
-int8 a[M][K];
-int16 b[K][N];
-int32 c[M][N];
- 
-void mmul()
-{
-  int8 *pa = a;
-  int32 *pc = c;
-  for (int y = 0; y < M; y++)
-  {
-    for (int x = 0; x < N; x++)
-    {
-      int16 *pb = b;
-      int32 s = 0;
-      for (int k = 0; k < K; k++)
-      {
-        s += pa[k] * pb[x];
-        pb += N;
-      }
-      pc[x] = s;
-    }
-    pa += K;
-    pc += N;
-  }
-}
+	task pb_x (int pb_p, int x);
+		#1;
+		command1 = `C1_READ16;
+		address1 = (pb_p + 2 * x) >> 4;
+		#2;
+		address1 = (pb_p + 2 * x) % 16;
+		#1;
+		reset_busses();
+		wait(C1 == `C1_RESPONSE);
+		#1;
+	endtask
 
-
-*/
-	reg [7:0] a[0:`M - 1][0:`K - 1];
-	reg [15:0] b[0:`K - 1][0:`N - 1];
-	reg [32:0] c[0:`M - 1][0:`N - 1];
+	task pc_x (int pc_p, int x);
+		#1;
+		command1 = `C1_WRITE32;
+		address1 = (pc_p + 4 * x) >> 4;
+		#2;
+		address1 = (pc_p + 4 * x) % 16;
+		#1;
+		reset_busses();
+		wait(C1 == `C1_NOP);
+		#3;
+	endtask
 
 	initial begin
-		command1 = `C1_WRITE8;
-		address1 = 1337;
-		#2;
-		address1 = 8;
-		data1 = 228;
-		reset_com();
-		#1;
-		wait (C1 == `C1_NOP);
-
-		#8;
-
-		command1 = `C1_READ8;
-		address1 = 1337;
-		#2;
-		address1 = 8;
-		reset_com();
-		#1;
-		wait (C1 == `C1_RESPONSE);
-
-
+		
 		for (int y = 0; y < `M; y++) begin
 			for (int x = 0; x < `N; x++) begin			
+				pb = b_begin_mem;
 				for (int k = 0; k < `K; k++) begin
-					
+					pa_k(pa, k);
+					pb_x(pb, x);
+					pb += 2 * `N;
 				end
+				pc_x(pc, x);
 			end
+			pa += `K;
+			pc += 4 * `N;
 		end
 
-		#10;
+		$display("misses: %d", miss_cnt);
+		$display("hits: %d", hit_cnt);
+		$display("clocks %d", clk_cnt);
 		$finish;
 	end
 
@@ -140,10 +135,10 @@ void mmul()
 	always @(posedge clk) begin
 		case (C1) 
 			`C1_NOP: begin
-				$display("CPU: no operation");
+				//$display("CPU: no operation");
 			end
 			`C1_RESPONSE: begin
-				$display("CPU: response recieved");
+				//$display("CPU: response recieved");
 			end
 		endcase
 	end

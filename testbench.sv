@@ -31,17 +31,12 @@ module test;
 
   always begin
     #1 clk = ~clk;
-    clk_cnt++;
     if (clk) begin // debug output of busses instances
-      $display("--------------------WIRE INSTANCES----------------------");
+      clk_cnt++;
+      /*$display("--------------------WIRE INSTANCES----------------------");
       $display("command1: %d | address1: %B | data1: %B", C1, A1, D1);
       $display("command2: %d | address2: %B | data2: %B ", C2, A2, D2);
-      $display("--------------------------------------------------------");
+      $display("--------------------------------------------------------");*/
     end
   end
-
-  initial begin
-    #300 $finish;
-  end
-
 endmodule

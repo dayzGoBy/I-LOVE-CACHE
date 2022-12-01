@@ -40,26 +40,28 @@ module MemCTR(
 
 		case (C2) 
 			`C2_NOP: begin
-				$display("MEM: no operation");
+				//$display("MEM: no operation");
 			end
 			`C2_READ_LINE: begin
-				$display("MEM: READ_LINE recieved",);
-				$display("getting line %b", A2);
+				//$display("MEM: READ_LINE recieved",);
+				//$display("getting line %b", A2);
 				address = A2;
 				#200;
+				#1;
 				command2 = `C2_RESPONSE;
 				for (int i = 0; i < 8; i++) begin
 					data2 [15:8] = mem [address << `CACHE_OFFSET_SIZE + 2 * i];
 					data2 [7:0] = mem [address << `CACHE_OFFSET_SIZE + 2 * i + 1];
 					#2;
 				end
-				#1;
+				#2;
 				command2 = `C2_DETHRONE;
 				data2 = `D_DETHRONE;
+				#1;
 			end
 			`C2_WRITE_LINE: begin
-				$display("MEM: WRITE_LINE recieved",);
-				$display("writing line %b", A2);
+				//$display("MEM: WRITE_LINE recieved",);
+				//$display("writing line %b", A2);
 				address = A2;
 
 				for (int i = 0; i < 8; i++) begin
@@ -68,6 +70,10 @@ module MemCTR(
 					#2;
 				end
 				#184; // don't ask me why
+				#1;
+				command2 = `C2_NOP;
+				#2;
+				command2 = `C2_DETHRONE;
 			end
 		endcase
 	end
